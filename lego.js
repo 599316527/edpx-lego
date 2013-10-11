@@ -47,28 +47,6 @@ cli.usage = 'edp lego <sub_cmd> ...';
  */
 cli.description = '素材库中样式开发常用的一些工具';
 
-/**
- * @param {Array.<string>} args 命令行参数.
- * @param {Object.<string, string>} opts 命令的可选参数.
- */
-/*cli.main = function(args, opts) {
-    console.log(args);
-    console.log(opts);
-
-    if (args.length <= 0) {
-        console.error(cli.usage);
-        process.exit(0);
-    }
-
-    var fs = require('fs');
-    var path = require('path');
-    if (fs.existsSync("./lib/" + args[0] + '.js')) {
-        var cmd = require("./lib/" + args[0]);
-        console.log(cmd);
-        cmd.main && cmd.main(opts);
-    }
-}*/
-
 exports.cli = cli;
 
 

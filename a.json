@@ -19,5 +19,12 @@
     "datatype": "OBJECT",
     "display": "toggle-block",
     "items" : "Var(ad.widget.Colorlist@10)"
+  },
+  {
+    "name": "lis3",
+    "displayName": "lis3",
+    "datatype": "OBJECT",
+    "display": "toggle-block",
+    "items" : "Var(ad.widget.NoSuchName)"
   }
 ]

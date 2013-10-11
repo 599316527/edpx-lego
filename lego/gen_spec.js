@@ -123,9 +123,9 @@ cli.main = function ( args, opts ) {
         request(url, function (error, response, body) {
             if (!error && response.statusCode == 200) {
                 rsp[ns] = JSON.parse(body);
-                index ++;
-                getWidgetInfo(callback);
             }
+            index ++;
+            getWidgetInfo(callback);
         });
     }
 
@@ -134,6 +134,10 @@ cli.main = function ( args, opts ) {
             var ns = match[1];
             var id = parseInt(match[3] || 0, 10);
             var array = rsp[ns];
+            if (!array) {
+                return;
+            }
+
             var item = array[0];
             if (id !== 0) {
                 for (var i = 0; i < array.length; i ++) {
