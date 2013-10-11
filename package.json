@@ -1,0 +1,13 @@
+{
+    "name": "edp-lego",
+    "description": "lego.baidu.com extension for edp",
+    "version": "0.0.1",
+    "contributors": [
+        { "name": "leeight", "email" : "leeight@gmail.com" }
+    ],
+
+    "dependencies": {
+        "request": "2.27.0"
+    },
+    "repository": "git://github.com/leeight/edp-lego"
+}
