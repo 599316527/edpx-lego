@@ -69,6 +69,32 @@ cli.main = function ( args, opts ) {
         process.exit(1);
     }
 
+    if (typeof input === 'object') {
+        // 输入的格式是：
+        // {'image': 'ad.widget.ImageGrid'}
+        // 转化为:
+        // [
+        //   {'name':'image','displayName':'image',
+        //    'datatype':'OBJECT','display':'toggle-block',
+        //    'rules':{},'items':'Var(ad.widget.ImageGrid)'}
+        // ]
+        var transformed = [];
+        for(var key in input) {
+            if (typeof input[key] === 'string' &&
+                /^ad\.widget\./.test(input[key])) {
+                transformed.push({
+                    'name': key,
+                    'displayName': key,
+                    'datatype': 'OBJECT',
+                    'display': 'toggle-block',
+                    'rules': {},
+                    'items': 'Var(' + input[key] + ')'
+                });
+            }
+        }
+        input = transformed;
+    }
+
     // 获取所有的ns列表
     var list = [];
     function walk(root, callback) {
