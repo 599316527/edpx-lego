@@ -47,77 +47,6 @@ cli.description = '分析impl.js，生成初版的spec.json';
 cli.usage = 'edp lego gen_spec2 <ad.js>';
 
 /**
- * 获取NewExpression的ClassName
- * @return {string}
- */
-function getClassName(callee) {
-    // {"type":"MemberExpression","computed":false,"object":{"type":"MemberExpression","computed":false,"object":{"type":"Identifier","name":"ad"},"property":{"type":"Identifier","name":"widget"}},"property":{"type":"Identifier","name":"SmallHead"}}
-    if (!callee.property) {
-        return callee.name;
-    }
-    return getClassName(callee.object) + '.' + callee.property.name;
-};
-
-/**
- * Namespace -> Filename的映射关系
- */
-var Indexer = {};
-
-function buildIndex() {
-    var goog = {
-        addDependency: function(filename, provides, requires) {
-            provides.forEach(function(provide){
-                Indexer[provide] = filename;
-            });
-        }
-    };
-
-    var fs = require('fs');
-    var lines = fs.readFileSync('src/deps.js', 'utf-8').split(/\r?\n/g);
-    lines.forEach(function(line){
-        if (/^goog\.addDependency/.test(line)) {
-            eval(line);
-        }
-    });
-}
-
-function parseNewExpression(node, parent) {
-    var klsName = getClassName(node.callee);
-    if (/^ad\.widget\./.test(klsName)) {
-        var args = node.arguments;
-        if (args.length != 1) {
-            console.error("Invalid arguments count for [%s]", klsName);
-            return;
-        }
-
-        var cfg = args[0];
-
-        if (cfg.type === 'ObjectExpression') {
-            // 可能是硬编码的配置信息，不需要从AD_CONFIG中读取
-            return;
-        }
-
-        if (cfg.type !== 'MemberExpression') {
-            console.error("Invalid arguments format for [%s]", klsName);
-            return;
-        }
-
-        if (cfg.object.type !== 'Identifier' ||
-            cfg.object.name !== 'AD_CONFIG') {
-            console.error("The [%s] arguments should begin with AD_CONFIG.", klsName);
-            return;
-        }
-
-        if (!cfg.property || cfg.property.type !== 'Literal') {
-            console.error("The [%s] AD_CONFIG's key should be const string.", klsName);
-            return;
-        }
-
-        return [klsName, cfg.property.value];
-    }
-};
-
-/**
  * 根据分析出来的tokens，生成对应的spec文件
  * @param {Array.<*>} tokens
  */
@@ -129,7 +58,7 @@ function generateSpecs(tokens) {
     tokens.forEach(function(token){
         var klsName = token[0];
         var key = token[1];
-        var fileName = Indexer[klsName];
+        var fileName = require('./base').getFilename(klsName);
         if (!fileName) {
             console.error("No such file %s", fileName);
             return;
@@ -180,26 +109,7 @@ cli.main = function ( args, opts ) {
 
     buildIndex();
 
-    var esprima = require('esprima');
-    var estraverse = require('estraverse');
-    var ast = esprima.parse(fs.readFileSync(args[0], 'utf-8'));
-    var tokens = [];
-    estraverse.traverse(ast, {
-        enter: function(node, parent) {
-            if (node.type == 'CallExpression') {
-                // console.log(node.id.name);
-            }
-        },
-        leave: function(node, parent) {
-            if (node.type == 'NewExpression') {
-                var token = parseNewExpression(node, parent);
-                if (token) {
-                    tokens.push(token);
-                }
-            }
-        }
-    });
-
+    var tokens = require('./base').getTokens(fs.readFileSync(args[0], 'utf-8'));
     generateSpecs(tokens);
 }
 
