@@ -52,6 +52,10 @@ function parseTemplate(template) {
 
     var base = require('./base');
     var filename = base.getFilename(template.namespace);
+    if (!filename) {
+        console.log('Please update your repos.');
+        return;
+    }
     var tokens = base.getTokens(fs.readFileSync('src/' + filename, 'utf-8'), filename);
 
     // FIXME(leeight) 貌似JSON.parse有时候会挂掉
@@ -81,11 +85,27 @@ function parseTemplate(template) {
         }
     });
 
+    function notFound(collection, item) {
+        var _ = require('underscore');
+        for (var i = 0; i < collection.length; i ++) {
+            if (_.isEqual(collection[i].spec, item.spec)) {
+                return i;
+            }
+        }
+        return true;
+    }
+
     for(var key in map) {
         if (!WidgetSpecCache[key]) {
             WidgetSpecCache[key] = [];
         }
-        WidgetSpecCache[key].push(map[key]);
+        var rv = notFound(WidgetSpecCache[key], map[key]);
+        if (rv === true) {
+            WidgetSpecCache[key].push(map[key]);
+        }
+        else {
+            WidgetSpecCache[key][rv].template.name += ('<strong>&#8596;</strong>' + map[key].template.name);
+        }
     }
 }
 
