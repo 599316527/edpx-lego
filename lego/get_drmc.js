@@ -126,7 +126,7 @@ cli.main = function ( args, opts ) {
                     }
                     var result = data.result;
                     if (format == 'file') {
-                        var file = path.join(saveToDir, id);
+                        var file = path.resolve(saveToDir, id + '');
                         fs.writeFileSync(file, result.rawData);
                     }
                     else {
@@ -141,7 +141,7 @@ cli.main = function ( args, opts ) {
                     console.log('They are all saved in ' + dirName + '!');
                 }
                 else {
-                    var jsonFile = path.join(saveToDir, 'downloaded_drmc.json');
+                    var jsonFile = path.resolve(saveToDir, 'downloaded_drmc.json');
                     console.log('It\'s saved in ' + jsonFile + '!');
                     fs.writeFileSync(jsonFile, JSON.stringify(map, null, 4));
                 }
