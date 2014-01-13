@@ -3,7 +3,8 @@
     "description": "lego.baidu.com extension for edp",
     "version": "0.0.1",
     "contributors": [
-        { "name": "leeight", "email" : "leeight@gmail.com" }
+        { "name": "leeight", "email" : "leeight@gmail.com" },
+        { "name": "songao", "email" : "osdream.song@gmail.com" }
     ],
 
     "dependencies": {
@@ -11,7 +12,8 @@
         "esprima": "~1.0.2",
         "estraverse": "~1.1.1",
         "mysql": ">=2.0.0-rc1",
-        "underscore": ">=1.5.2"
+        "underscore": ">=1.5.2",
+        "prompt": "*"
     },
     "repository": "git://github.com/leeight/edp-lego"
 }
