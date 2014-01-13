@@ -1,0 +1,5 @@
+function(item) {
+    if (/无线品专/.test(item.templateName)) {
+        return item;
+    }
+}

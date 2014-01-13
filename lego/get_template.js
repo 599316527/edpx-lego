@@ -75,6 +75,25 @@ cli.main = function ( args, opts ) {
                         console.log('ERROR: read template fail: ' + err);
                     }
                     else {
+                        var detail = data.result;
+                        if (detail.spec) {
+                            try {
+                                detail.spec = JSON.parse(detail.spec);
+                            }
+                            catch(e) {
+                                try {
+                                    detail.spec = eval('(' + detail.spec + ')');
+                                    // 如果用JS去解析JSON都解析不了
+                                    // 那就回指定catch里的语句，报ERROR
+                                    // 否则指定下面的语句，报WARNING
+                                    console.log('WARN: invalid json, templateId=' + detail.templateId + ', ' + e);
+                                }
+                                catch(ex) {
+                                    console.log('ERROR: parse spec error, ' + e);
+                                    console.log(JSON.stringify(detail));
+                                }
+                            }
+                        }
                         list.push(data.result);
                     }
                     callback();

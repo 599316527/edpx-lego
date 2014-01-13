@@ -17,7 +17,7 @@
 var fs = require('fs');
 
 // 素材库环境
-var WHICH_LEGO = 'offline'; // or online
+var WHICH_LEGO = 'dev00'; // online, offline, dev00
 
 // 素材库配置 (可以按需要自行增加)
 switch(WHICH_LEGO) {
@@ -28,6 +28,10 @@ switch(WHICH_LEGO) {
     case 'offline': // 线下 lego-off.baidu.com
         exports.legoHost = 'http://lego-off.baidu.com/';
         exports.loginPath = 'http://itebeta.baidu.com:8100/login?service=http%3A%2F%2Flego-off.baidu.com%2F';
+        break;
+    case 'dev00': // ??
+        exports.legoHost = 'http://tc-sdcrd-dev00.tc.baidu.com:8020/';
+        exports.loginPath = 'http://itebeta.baidu.com:8100/login?service=http%3A%2F%2Ftc-sdcrd-dev00.tc.baidu.com%3A8020%2F';
         break;
     default:break;
 }
