@@ -17,7 +17,7 @@
 var fs = require('fs');
 
 // 素材库环境
-var WHICH_LEGO = 'dev00'; // online, offline, dev00
+var WHICH_LEGO = 'offline'; // online, offline, dev00
 
 // 素材库配置 (可以按需要自行增加)
 switch(WHICH_LEGO) {
