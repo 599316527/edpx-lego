@@ -45,7 +45,7 @@ cli.options = ['by:', 'format:', 'output_dir:'];
  *
  * @type {string}
  */
-cli.description = '获取所有样式数据';
+cli.description = '根据mcid或者mid获取drmc内容';
 
 /**
  * 命令用法信息
@@ -113,7 +113,7 @@ cli.main = function ( args, opts ) {
 
     function getDrmc(ids, saveToDir, by, format) {
         var reqFunc = (by == 'mcid' ? req.getDrmcByMcid : req.getDrmcByMid);
-        var list = [];
+        var map = {};
         util.poolify(
             ids,
             50,
@@ -122,6 +122,7 @@ cli.main = function ( args, opts ) {
                     if (err) {
                         console.log('ERROR: ' + err);
                         callback();
+                        return;
                     }
                     var result = data.result;
                     if (format == 'file') {
@@ -129,7 +130,7 @@ cli.main = function ( args, opts ) {
                         fs.writeFileSync(file, result.rawData);
                     }
                     else {
-                        list.push(result);
+                        map[id] = result;
                     }
                     callback();
                 });
@@ -142,7 +143,7 @@ cli.main = function ( args, opts ) {
                 else {
                     var jsonFile = path.join(saveToDir, 'downloaded_drmc.json');
                     console.log('It\'s saved in ' + jsonFile + '!');
-                    fs.writeFileSync(jsonFile, JSON.stringify(list, null, 4));
+                    fs.writeFileSync(jsonFile, JSON.stringify(map, null, 4));
                 }
             }
         );

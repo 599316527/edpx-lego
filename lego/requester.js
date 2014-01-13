@@ -632,10 +632,11 @@ function updateDrmcContent(id, type, content, callback) {
         },
         function(err, data) {
             if (err || !parseError(data)) {
-                console.log('ERROR: update drmc content fail, ' + nameMap[type] + '= ' + id);
+                console.log('ERROR: update drmc content fail, ' + nameMap[type] + ' = ' + id);
                 callback(err || data);
             }
             else {
+                console.log('INFO: successfully update drmc content, ' + nameMap[type] + ' = ' + id);
                 callback(null, data);
             }
         }
