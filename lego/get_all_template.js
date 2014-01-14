@@ -34,6 +34,12 @@ var cli = {};
 cli.command = 'get_all_template';
 
 /**
+ * 选项
+ * @type {Array}
+ */
+cli.options = ['filter:'];
+
+/**
  * 命令描述信息
  *
  * @type {string}
@@ -45,7 +51,7 @@ cli.description = '获取所有样式数据';
  *
  * @type {string}
  */
-cli.usage = 'edp lego get_all_template <saveto.json>';
+cli.usage = 'edp lego get_all_template [--filter=<your.filter>] <saveto.json>\n\nfilter example:\n\n    function(item) {\n        if (/无线品专/.test(item.templateName)) {\n            return item;\n        }\n    }';
 
 /**
  * 模块命令行运行入口
@@ -55,17 +61,22 @@ cli.usage = 'edp lego get_all_template <saveto.json>';
 cli.main = function ( args, opts ) {
     req.prepare(function() {
         var file = args[0] || 'all_template.json';
-        getAllTemplate(file);
+        var filter = opts['filter'];
+        getAllTemplate(file, filter || null);
     });
 
-    function getAllTemplate(file, opt_callback) {
+    function getAllTemplate(file, opt_filter) {
+        var filter = null;
+        if (opt_filter && fs.existsSync(opt_filter)) {
+            var filterStr = fs.readFileSync(opt_filter, 'utf-8');
+            filter = eval('(function() {return (' + filterStr + ');})();');
+        }
         req.getTemplateList(function(err, list) {
             if (err) {
                 console.log('ERROR: ' + err);
             }
             else {
                 var count = list.length;
-                console.log('Total template count: ' + count);
                 var detailList = [];
                 list.forEach(function(item) {
                     req.getTemplateDetail(item.templateId, function(err, data) {
@@ -79,21 +90,34 @@ cli.main = function ( args, opts ) {
                                     detail.spec = JSON.parse(detail.spec);
                                 }
                                 catch(e) {
-                                    console.log('ERROR: parse spec error, ' + e);
-                                    console.log(JSON.stringify(detail));
+                                    try {
+                                        detail.spec = eval('(' + detail.spec + ')');
+                                        // 如果用JS去解析JSON都解析不了
+                                        // 那就回指定catch里的语句，报ERROR
+                                        // 否则指定下面的语句，报WARNING
+                                        console.log('WARN: invalid json, templateId=' + detail.templateId + ', ' + e);
+                                    }
+                                    catch(ex) {
+                                        console.log('ERROR: parse spec error, ' + e);
+                                        console.log(JSON.stringify(detail));
+                                    }
                                 }
                             }
-                            detailList.push(detail);
+                            if (filter) {
+                                detail = filter(detail);
+                                if (detail) {
+                                    detailList.push(detail);
+                                }
+                            }
+                            else {
+                                detailList.push(detail);
+                            }
                         }
                         count--;
                         if (count == 0) {
-                            if (opt_callback) {
-                                opt_callback(null, detailList);
-                            }
-                            else if (file) {
-                                console.log('It\'s saved in ' + file + '!');
-                                fs.writeFileSync(file, JSON.stringify(detailList, null, 4));
-                            }
+                            console.log('Total template count: ' + detailList.length);
+                            console.log('It\'s saved in ' + file + '!');
+                            fs.writeFileSync(file, JSON.stringify(detailList, null, 4));
                         }
                     });
                 });

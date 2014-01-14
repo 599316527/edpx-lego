@@ -1,0 +1,10 @@
+function(item) {
+    if (item.templateType == 'JS') {
+        if (item.spec) {
+            var spec = JSON.stringify(item.spec);
+            if (/display_official_site_icon/.test(spec)) {
+                return item;
+            }
+        }
+    }
+}

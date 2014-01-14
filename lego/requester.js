@@ -270,6 +270,11 @@ function login(callback) {
             legoUrl,
             info.query,
             function(err, data, res) {
+                if (err) {
+                    console.log('Error: ' + err);
+                    startLogin();
+                    return;
+                }
                 addCookie(res.headers['set-cookie'], legoUrl);
                 if (res.statusCode == '200' || res.statusCode == '302') {
                     jarUtil.getCookieString(jar, config.legoHost, function(err, cookies) {
@@ -557,6 +562,88 @@ function updateTemplate(detail, callback) {
 }
 
 /**
+ * 通过mcid获取drmc内容
+ */
+function getDrmcByMcid(mcid, callback) {
+    getDrmcContent(mcid, '1', callback);
+}
+
+/**
+ * 通过mid获取drmc内容
+ */
+function getDrmcByMid(mid, callback) {
+    getDrmcContent(mid, '0', callback);
+}
+
+/**
+ * 获取drmc内容
+ */
+function getDrmcContent(id, type, callback) {
+    var nameMap = {
+        '0': 'mid',
+        '1': 'mcid'
+    };
+    post(
+        getUrl('/data/drmc/detail'),
+        {
+            'id': id,
+            'type': type
+        },
+        function(err, data) {
+            if (err || !parseError(data)) {
+                console.log('ERROR: get drmc content fail, ' + nameMap[type] + '= ' + id);
+                callback(err || data);
+            }
+            else {
+                callback(null, data);
+            }
+        }
+    );
+}
+
+/**
+ * 通过mcid更新drmc内容
+ */
+function updateDrmcByMcid(mcid, content, callback) {
+    updateDrmcContent(mcid, '1', content, callback);
+}
+
+/**
+ * 通过mid更新drmc内容
+ */
+function updateDrmcByMid(mid, content, callback) {
+    updateDrmcContent(mid, '0', content, callback);
+}
+
+/**
+ * 更新drmc内容
+ */
+function updateDrmcContent(id, type, content, callback) {
+    var nameMap = {
+        '0': 'mid',
+        '1': 'mcid'
+    };
+    post(
+        getUrl('/data/drmc/update'),
+        {
+            'id': id,
+            'type': type,
+            'content': content
+        },
+        function(err, data) {
+            if (err || !parseError(data)) {
+                console.log('ERROR: update drmc content fail, ' + nameMap[type] + ' = ' + id);
+                callback(err || data);
+            }
+            else {
+                console.log('INFO: successfully update drmc content, ' + nameMap[type] + ' = ' + id);
+                callback(null, data);
+            }
+        }
+    );
+}
+
+/**
  * 解析错误信息
  */
 function parseError(data) {
@@ -678,6 +765,10 @@ exports.getTemplateDetail = getTemplateDetail;
 exports.disableTemplate = disableTemplate;
 exports.updateTemplate = updateTemplate;
 exports.publishTemplate = publishTemplate;
+exports.getDrmcByMcid = getDrmcByMcid;
+exports.getDrmcByMid = getDrmcByMid;
+exports.updateDrmcByMcid = updateDrmcByMcid;
+exports.updateDrmcByMid = updateDrmcByMid;
 exports.get = get;
 exports.post = post;
 exports.parseError = parseError;
