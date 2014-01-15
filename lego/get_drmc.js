@@ -52,7 +52,7 @@ cli.description = '根据mcid或者mid获取drmc内容';
  *
  * @type {string}
  */
-cli.usage = 'edp lego get_drmc [--by=(mcid|mid)] [--format=(json|file)] [--output_dir=<dir>] [<id_in_file>] [<ID>[,<ID>]]';
+cli.usage = 'edp lego get_drmc [--by=(mcid|mid)] [--format=(json|file|js)] [--output_dir=<dir>] [<id_in_file>] [<ID>[,<ID>]]';
 
 /**
  * 模块命令行运行入口
@@ -129,6 +129,26 @@ cli.main = function ( args, opts ) {
                         var file = path.resolve(saveToDir, id + '');
                         fs.writeFileSync(file, result.rawData);
                     }
+                    else if (format == 'js') {
+                        var reg = RegExp(/http:\/\/ecma.bdimg.com\/([a-zA-Z-]+)\/([0-9a-zA-Z-]+:?\.js)/);
+                        var res = reg.exec(result.rawData);
+                        if (res) {
+                            var url = res[0];
+                            var dir = path.resolve(saveToDir, res[1]);
+                            var filename = res[2];
+                            if (!fs.existsSync(dir)) {
+                                fs.mkdirSync(dir);
+                            }
+                            req.get(url, function (err, body, res) {
+                                if (err) {
+                                    console.log(err + ' id: ' + id);
+                                    return;
+                                }
+                                var file = path.resolve(dir, filename);
+                                fs.writeFileSync(file, body);
+                            });
+                        }
+                    }
                     else {
                         map[id] = result;
                     }
@@ -136,11 +156,11 @@ cli.main = function ( args, opts ) {
                 });
             },
             function() {
-                if (format == 'file') {
+                if (format == 'file' || format == 'js') {
                     var dirName = saveToDir == '.' ? 'current directory' : saveToDir;
                     console.log('They are all saved in ' + dirName + '!');
                 }
-                else {
+                else if (format == 'json') {
                     var jsonFile = path.resolve(saveToDir, 'downloaded_drmc.json');
                     console.log('It\'s saved in ' + jsonFile + '!');
                     fs.writeFileSync(jsonFile, JSON.stringify(map, null, 4));
