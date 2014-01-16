@@ -52,7 +52,7 @@ cli.description = '根据mcid或者mid获取drmc内容';
  *
  * @type {string}
  */
-cli.usage = 'edp lego get_drmc [--by=(mcid|mid)] [--format=(json|file)] [--output_dir=<dir>] [<id_in_file>] [<ID>[,<ID>]]';
+cli.usage = 'edp lego get_drmc [--by=(mcid|mid)] [--format=(json|file|js)] [--output_dir=<dir>] [<id_in_file>] [<ID>[,<ID>]]';
 
 /**
  * 模块命令行运行入口
@@ -86,8 +86,8 @@ cli.main = function ( args, opts ) {
                     ids = ids.concat(idsInFile);
                 }
                 catch(e) {
-                    // 再把它当成空白字符(空格、回车等)分隔的id
-                    var arr = idStr.split(/\s+/);
+                    // 再把它当成空白字符(空格、回车、逗号等)分隔的id
+                    var arr = idStr.split(/[\s,]+/);
                     var wrong = [];
                     arr.forEach(function(item) {
                         if (item) {
@@ -114,13 +114,15 @@ cli.main = function ( args, opts ) {
     function getDrmc(ids, saveToDir, by, format) {
         var reqFunc = (by == 'mcid' ? req.getDrmcByMcid : req.getDrmcByMid);
         var map = {};
+        var errorList = [];
         util.poolify(
             ids,
-            50,
+            30,
             function(id, callback) {
                 reqFunc(id, function(err, data) {
                     if (err) {
-                        console.log('ERROR: ' + err);
+                        console.log('ERROR: ' + JSON.stringify(err));
+                        errorList.push(id);
                         callback();
                         return;
                     }
@@ -128,22 +130,66 @@ cli.main = function ( args, opts ) {
                     if (format == 'file') {
                         var file = path.resolve(saveToDir, id + '');
                         fs.writeFileSync(file, result.rawData);
+                        callback();
+                    }
+                    else if (format == 'js') {
+                        var reg = RegExp(/http:\/\/ecma.bdimg.com\/([a-zA-Z-]+)\/([0-9a-zA-Z-]+:?\.js)/g);
+                        var res = reg.exec(result.rawData);
+                        if (!res) {
+                            console.log('ERROR: this file do not have correct js link, id: ' + id);
+                            errorList.push(id);
+                            callback();
+                        }
+                        else if (reg.exec(result.rawData)) {
+                            console.log('ERROR: this file has two or more js links, id: ' + id);
+                            errorList.push(id);
+                            callback();
+                        }
+                        else {
+                            var url = res[0];
+                            var dir = path.resolve(saveToDir, res[1]);
+                            var filename = res[2];
+                            var reqRaw = require('request');
+                            if (!fs.existsSync(dir)) {
+                                fs.mkdirSync(dir);
+                            }
+                            reqRaw.get(url, function (err, response, body) {
+                                if (err) {
+                                    console.log('ERROR: ' + err + ' id: ' + id);
+                                    errorList.push(id);
+                                }
+                                else if (response.statusCode == 200) {
+                                    var file = path.resolve(dir, filename);
+                                    fs.writeFileSync(file, body);
+                                }
+                                else {
+                                    console.log('ERROR: fail to get js content, id: ' + id);
+                                    errorList.push(id);
+                                }
+                                callback();
+                            });
+                        }
                     }
                     else {
                         map[id] = result;
+                        callback();
                     }
-                    callback();
                 });
             },
             function() {
-                if (format == 'file') {
+                if (format == 'file' || format == 'js') {
                     var dirName = saveToDir == '.' ? 'current directory' : saveToDir;
                     console.log('They are all saved in ' + dirName + '!');
                 }
-                else {
+                else if (format == 'json') {
                     var jsonFile = path.resolve(saveToDir, 'downloaded_drmc.json');
                     console.log('It\'s saved in ' + jsonFile + '!');
                     fs.writeFileSync(jsonFile, JSON.stringify(map, null, 4));
+                }
+                if (errorList.length > 0) {
+                    var errorLog = path.resolve(saveToDir, 'errorList');
+                    fs.writeFileSync(errorLog, errorList.join('\r\n'));
+                    console.log('ERROR: Error ids are in ' + errorLog);
                 }
             }
         );
