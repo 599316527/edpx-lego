@@ -644,6 +644,71 @@ function updateDrmcContent(id, type, content, callback) {
 }
 
 /**
+ * 创建物料
+ * @param {{
+ *    templateId: number,
+ *    ?app: number,
+ *    ?outputType: string,
+ *    ?plugins: string,
+ *    ?linkTransformType: string,
+ *    ?pluginValues: Object,
+ *    ?previewTemplate: string,
+ *    data: Object
+ * }} materialData 物料数据
+ */
+function createMaterial(materialData, callback) {
+    var defaultData = {
+        'app': 3,
+        'outputType': 'v2',
+        'plugins': 'ad.plugin.ClickMonkey,ad.plugin.PsMonitor',
+        'linkTransformType': 'nil',
+        'pluginValues': {
+            "ad.plugin.ClickMonkey": {
+                "plid": "%PLID%"
+            },
+            "ad.plugin.WiseClickMonkey": {
+                "plid": "%PLID%"
+            },
+            "ad.plugin.Hmt": {
+                "hmjs_id": ""
+            },
+            "ad.plugin.PsMonitor": {
+                "fm": ""
+            }
+        },
+        'previewTemplate': 'ad/template/ps.tpl'
+    };
+    for (var key in defaultData) {
+        if (typeof materialData[key] == 'undefined') {
+            materialData[key] = defaultData[key];
+        }
+    }
+    var postData = {};
+    for (var key in materialData) {
+        if (typeof materialData[key] == 'object') {
+            postData[key] = JSON.stringify(materialData[key]);
+        }
+        else {
+            postData[key] = materialData[key];
+        }
+    }
+    post(
+        getUrl('/data/material/create'),
+        postData,
+        function(err, data) {
+            if (err || !parseError(data)) {
+                console.log('ERROR: make material fail, input = ' + JSON.stringify(materialData));
+                callback(err || data);
+            }
+            else {
+                console.log('INFO: successfully make material, templateId = ' + materialData.templateId);
+                callback(null, data);
+            }
+        }
+    );
+}
+
+/**
  * 解析错误信息
  */
 function parseError(data) {
@@ -769,6 +834,7 @@ exports.getDrmcByMcid = getDrmcByMcid;
 exports.getDrmcByMid = getDrmcByMid;
 exports.updateDrmcByMcid = updateDrmcByMcid;
 exports.updateDrmcByMid = updateDrmcByMid;
+exports.createMaterial = createMaterial;
 exports.get = get;
 exports.post = post;
 exports.parseError = parseError;
