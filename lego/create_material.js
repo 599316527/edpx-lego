@@ -38,7 +38,7 @@ cli.command = 'create_material';
  * 选项
  * @type {Array}
  */
-cli.options = ['by:', 'format:', 'output_dir:'];
+cli.options = [];
 
 /**
  * 命令描述信息
@@ -84,14 +84,18 @@ cli.main = function ( args, opts ) {
                         return;
                     }
                     var result = data.result;
-                    item.bcsUrl = result.bcsUrl;
-                    item.previewHtmlUrl = result.previewHtmlUrl;
-                    item.mid = result.mid;
-                    mats.push(item);
+                    var mat = {
+                        'input': item,
+                        'bcsUrl': result.bcsUrl,
+                        'previewHtmlUrl': result.previewHtmlUrl,
+                        'mid': result.mid
+                    }
+                    mats.push(mat);
                     callback();
                 });
             },
             function() {
+                console.log('INFO: finished.');
                 fs.writeFileSync(output, JSON.stringify(mats, null, 4));
             }
         );
