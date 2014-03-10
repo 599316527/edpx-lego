@@ -65,6 +65,9 @@ cli.main = function ( args, opts ) {
     });
 
     function updateTemplateWithJson(list) {
+        // 倒序，保证更新之后仍大约按list里模板的顺序(因为先更新的模板会放到后面去...)
+        list.reverse();
+
         var failedList = [];
         util.poolify(
             list,
