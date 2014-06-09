@@ -318,9 +318,12 @@ function getTemplateList(callback) {
         post(
             getUrl('/data/template/list'),
             {
-                'status': 'null',
+                'status': '',
                 'keyword': '',
                 'creator': '',
+                'templateId': '',
+                'appId': '',
+                'tags': [],
                 'page.pageSize': 60,
                 'page.pageNo': pageNo,
                 'page.orderBy': '',
