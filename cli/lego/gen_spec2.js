@@ -58,7 +58,7 @@ function generateSpecs(tokens) {
     tokens.forEach(function(token){
         var klsName = token[0];
         var key = token[1];
-        var fileName = require('./base').getFilename(klsName);
+        var fileName = require('../../lego/base').getFilename(klsName);
         if (!fileName) {
             console.error("No such file %s", fileName);
             return;
@@ -109,7 +109,7 @@ cli.main = function ( args, opts ) {
 
     buildIndex();
 
-    var tokens = require('./base').getTokens(fs.readFileSync(args[0], 'utf-8'));
+    var tokens = require('../../lego/base').getTokens(fs.readFileSync(args[0], 'utf-8'));
     generateSpecs(tokens);
 }
 

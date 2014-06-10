@@ -14,10 +14,10 @@
  * date:    $Date: 2014/01/17 15:13:08$
  */
 
-var req = require('./requester');
+var req = require('../../lego/requester');
 var fs = require('fs');
 var path = require('path');
-var util = require('./util');
+var util = require('../../lego/util');
 
 /**
  * 命令行配置项

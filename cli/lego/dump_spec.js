@@ -50,7 +50,7 @@ var WidgetSpecCache = {};
 function parseTemplate(template) {
     var fs = require('fs');
 
-    var base = require('./base');
+    var base = require('../../lego/base');
     var filename = base.getFilename(template.namespace);
     if (!filename) {
         console.log('Please update your repos.');

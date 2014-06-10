@@ -1,5 +1,5 @@
 {
-    "name": "edp-lego",
+    "name": "edpx-lego",
     "description": "lego.baidu.com extension for edp",
     "version": "0.0.1",
     "contributors": [
@@ -17,3 +17,4 @@
     },
     "repository": "git://github.com/leeight/edp-lego"
 }
+

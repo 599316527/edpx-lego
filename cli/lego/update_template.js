@@ -7,16 +7,16 @@
  
  
 /*
- * path:    update_template_with_json.js
- * desc:    更新指定JSON中的多个样式
+ * path:    update_template.js
+ * desc:    更新指定ID的一个或多个样式
  * author:  songao(songao@baidu.com)
  * version: $Revision$
- * date:    $Date: 2014/01/13 13:18:02$
+ * date:    $Date: 2014/01/13 11:29:03$
  */
 
-var req = require('./requester');
+var req = require('../../lego/requester');
 var fs = require('fs');
-var util = require('./util');
+var util = require('../../lego/util');
 
 /**
  * 命令行配置项
@@ -31,21 +31,21 @@ var cli = {};
  *
  * @type {string}
  */
-cli.command = 'update_template_with_json';
+cli.command = 'update_template';
 
 /**
  * 命令描述信息
  *
  * @type {string}
  */
-cli.description = '更新JSON文件中指定的多个样式';
+cli.description = '更新指定ID的一个或多个样式';
 
 /**
  * 命令用法信息
  *
  * @type {string}
  */
-cli.usage = 'edp lego update_template_with_json <template.json>';
+cli.usage = 'edp lego update_template <ID>[,<ID>]';
 
 /**
  * 模块命令行运行入口
@@ -54,28 +54,24 @@ cli.usage = 'edp lego update_template_with_json <template.json>';
  */
 cli.main = function ( args, opts ) {
     req.prepare(function() {
-        var file = args[0];
-        if (!file) {
-            console.log('ERROR: missing json file in args');
+        var commandArgs = util.parseIds(args);
+        if (!commandArgs || !commandArgs.ids.length) {
+            console.log('ERROR: missing id of template in args');
         }
         else {
-            var json = JSON.parse(fs.readFileSync(file, 'utf-8'));
-            updateTemplateWithJson(json);
+            updateTemplateById(commandArgs.ids);
         }
     });
 
-    function updateTemplateWithJson(list) {
-        // 倒序，保证更新之后仍大约按list里模板的顺序(因为先更新的模板会放到后面去...)
-        list.reverse();
-
+    function updateTemplateById(ids) {
         var failedList = [];
         util.poolify(
-            list,
+            ids,
             2,
-            function(detail, callback) {
-                req.updateTemplate(detail, function(err) {
+            function(templateId, callback) {
+                req.updateTemplate(templateId, function(err) {
                     if (err) {
-                        console.log('ERROR: update template fail: ' + err + ', templateId = ' + detail.templateId);
+                        console.log('ERROR: update template fail: ' + err + ', templateId = ' + templateId);
                         failedList.push(detail.templateId);
                     }
                     callback();
@@ -98,7 +94,6 @@ cli.main = function ( args, opts ) {
  * @type {Object}
  */
 exports.cli = cli;
-
 
 
 
