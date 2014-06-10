@@ -3,6 +3,9 @@ lego
 
 ### Usage
 
+edp lego config list                列出当前的配置数据
+edp lego config set                 设置配置选项
+
 edp lego get_template               获取指定ID的样式数据
 edp lego update_template            更新指定ID的一个或多个样式
 edp lego get_all_template           获取所有样式数据

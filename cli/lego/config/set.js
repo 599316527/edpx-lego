@@ -56,8 +56,7 @@ cli.usage = 'edp lego config set <key> <value>';
  */
 cli.main = function ( args, opts ) {
     if (!args.length || args.length < 2) {
-        console.log('Usage:');
-        console.log(cli.usage);
+        console.log( 'See `edp lego config set --help`' );
         return;
     }
     else {
