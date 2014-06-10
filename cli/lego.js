@@ -42,6 +42,15 @@ cli.options = [];
 cli.usage = 'edp lego <sub_cmd> ...';
 
 /**
+ * 模块命令行运行入口
+ *
+ * @param {Array} args 命令运行参数
+ */
+cli.main = function ( args, opts ) {
+    console.log( 'See `edp lego --help`' );
+};
+
+/**
  * @const
  * @type {string}
  */

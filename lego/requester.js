@@ -121,12 +121,13 @@ function login(callback) {
         if (retryTime < 2) {
             console.log('Wrong username or password, try again:');
         }
+        var env = config.getEnviroment();
         getUserAccount(function(err) {
             get(
-                config.loginPath,
+                env.loginPath,
                 {},
                 function(err, data, res) {
-                    addCookie(res.headers['set-cookie'], config.loginPath);
+                    addCookie(res.headers['set-cookie'], env.loginPath);
 
                     var html = data;
                     // <input type="hidden" name="lt" value="LT-338668-uBRHsK7kKGFvxMtr3klhMubmmPQbKf" />
@@ -140,7 +141,7 @@ function login(callback) {
                     if (matches && matches.length > 1) {
                         postData.execution = matches[1];
                     }
-                    loginToPath(config.loginPath);
+                    loginToPath(env.loginPath);
                 }
             );
         });
@@ -234,16 +235,17 @@ function login(callback) {
         srcs.forEach(function(src) {
             post(src, {}, function() {});
         });
+        var env = config.getEnviroment();
         setTimeout(function() {
             post(
-                config.loginPath,
+                env.loginPath,
                 {
                     'execution': executionStr,
                     '_eventId': 'submit',
                     'setCookiePathFailure': 'http://setcookie2.com'
                 },
                 function(err, data, res) {
-                    addCookie(res.headers['set-cookie'], config.loginPath);
+                    addCookie(res.headers['set-cookie'], env.loginPath);
                     if (res.statusCode == '200') {
                         console.log('ERROR: login error! why 200?');
                         startLogin();
@@ -266,6 +268,7 @@ function login(callback) {
 
     function loginStage3(legoUrl) {
         var info = url.parse(legoUrl, true);
+        var env = config.getEnviroment();
         get(
             legoUrl,
             info.query,
@@ -277,7 +280,7 @@ function login(callback) {
                 }
                 addCookie(res.headers['set-cookie'], legoUrl);
                 if (res.statusCode == '200' || res.statusCode == '302') {
-                    jarUtil.getCookieString(jar, config.legoHost, function(err, cookies) {
+                    jarUtil.getCookieString(jar, env.legoHost, function(err, cookies) {
                         if (err) {
                             callback(err);
                             return;
@@ -779,11 +782,12 @@ function post(url, params, callback, options) {
         options.form = params;
     }
     if (config.cookie) {
+        var env = config.getEnviroment();
         var jar = options.jar || request.jar();
         var parts = config.cookie.split(';');
         parts.forEach(function(one) {
             if (one) {
-                jarUtil.setCookie(jar, one, config.legoHost.replace(/\/$/, ''));
+                jarUtil.setCookie(jar, one, env.legoHost.replace(/\/$/, ''));
             }
         });
         options.jar = jar;
@@ -807,11 +811,12 @@ function get(url, params, callback, options) {
         options.qs = params;
     }
     if (config.cookie) {
+        var env = config.getEnviroment();
         var jar = options.jar || request.jar();
         var parts = config.cookie.split(';');
         parts.forEach(function(one) {
             if (one) {
-                jarUtil.setCookie(jar, one, config.legoHost.replace(/\/$/, ''));
+                jarUtil.setCookie(jar, one, env.legoHost.replace(/\/$/, ''));
             }
         });
         options.jar = jar;
@@ -822,7 +827,8 @@ function get(url, params, callback, options) {
 };
 
 function getUrl(path) {
-    return config.legoHost + path;
+    var env = config.getEnviroment();
+    return env.legoHost + path;
 }
 
 exports.prepare = prepare;
