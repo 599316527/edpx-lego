@@ -72,7 +72,7 @@ cli.main = function ( args, opts ) {
                 req.updateTemplate(templateId, function(err) {
                     if (err) {
                         console.log('ERROR: update template fail: ' + err + ', templateId = ' + templateId);
-                        failedList.push(detail.templateId);
+                        failedList.push(templateId);
                     }
                     callback();
                 });
