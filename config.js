@@ -1,18 +1,16 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    config.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/01/08 21:14:25$
+ * @desc:    一些配置
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    config.js
- * desc:    一些配置
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/01/08 21:14:25$
- */
+
 
 var fs = require('fs');
 var u = require('underscore');
@@ -49,7 +47,7 @@ function getConfig() {
     return configJson;
 }
 function saveConfig(config) {
-    if (typeof config == 'undefined') {
+    if (typeof config === 'undefined') {
         return;
     }
     var configJson = getConfig();
@@ -74,12 +72,10 @@ function getCookie() {
         var env = getEnviroment();
         return cookieJson[env.legoHost] || '';
     }
-    else {
-        return '';
-    }
+    return '';
 }
 function saveCookie(cookie) {
-    if (typeof cookie == 'undefined') {
+    if (typeof cookie === 'undefined') {
         return;
     }
     var cookieJson = {};
@@ -94,22 +90,20 @@ function saveCookie(cookie) {
 }
 exports.cookie = getCookie();
 exports.saveCookie = saveCookie;
-exports.get = function(key) {
+exports.get = function (key) {
     var configJson = getConfig();
     if (key) {
         return configJson[key];
     }
-    else {
-        return configJson;
-    }
+    return configJson;
 };
-exports.set = function(key, value) {
-    if (typeof key != 'string') {
+exports.set = function (key, value) {
+    if (typeof key !== 'string') {
         saveConfig(key);
     }
     else {
         var obj = {};
-        obj[key] = value
+        obj[key] = value;
         saveConfig(obj);
     }
 };

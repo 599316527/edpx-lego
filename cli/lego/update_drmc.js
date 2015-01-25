@@ -1,18 +1,16 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    lego/update_drmc.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/01/14 00:42:08$
+ * @desc:    更新drmc内容
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    lego/update_drmc.js
- * desc:    更新drmc内容
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/01/14 00:42:08$
- */
+
 
 var req = require('../../lego/requester');
 var fs = require('fs');
@@ -58,24 +56,25 @@ cli.usage = 'edp lego update_drmc [--by=(mcid|mid)] <dir|json_file>';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
-    req.prepare(function() {
+cli.main = function (args, opts) {
+    req.prepare(function () {
         var input = args[0] || '.';
-        var by = opts['by'] || 'mcid';
+        var by = opts.by || 'mcid';
         updateDrmc(input, by);
     });
 
     function updateDrmc(input, by) {
-        var reqFunc = (by == 'mcid' ? req.updateDrmcByMcid : req.updateDrmcByMid);
+        var reqFunc = (by === 'mcid' ? req.updateDrmcByMcid : req.updateDrmcByMid);
         var map = collectList(input);
         var ids = Object.keys(map).sort();
         var failedList = [];
         util.poolify(
             ids,
             5,
-            function(id, callback) {
-                reqFunc(id, map[id], function(err, data) {
+            function (id, callback) {
+                reqFunc(id, map[id], function (err, data) {
                     if (err) {
                         console.log('ERROR: ' + err);
                         failedList.push(id);
@@ -83,7 +82,7 @@ cli.main = function ( args, opts ) {
                     callback();
                 });
             },
-            function() {
+            function () {
                 if (failedList.length) {
                     console.log('ERROR: failed id are:');
                     console.log(failedList.join(','));
@@ -100,7 +99,7 @@ cli.main = function ( args, opts ) {
             var content = fs.readFileSync(input, 'utf-8');
             try {
                 var json = JSON.parse(content);
-                Object.keys(json).forEach(function(id) {
+                Object.keys(json).forEach(function (id) {
                     var item = json[id];
                     map[id] = item.rawData;
                 });
@@ -124,11 +123,12 @@ cli.main = function ( args, opts ) {
      * 扫描目录，搜索drmc内容文件
      *
      * @param {string} dir 目录路径名
+     * @param {Object} map id到文件内容的映射
      */
     function scanDir(dir, map) {
         fs.readdirSync(dir)
             .sort(
-                function(file) {
+                function (file) {
                     var fullPath = path.resolve(dir, file);
                     if (fs.statSync(fullPath).isDirectory()) {
                         return 1;

@@ -1,18 +1,16 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    get_template.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/01/12 20:48:56$
+ * @desc:    获取指定ID的一个或多个样式
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    get_template.js
- * desc:    获取指定ID的一个或多个样式
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/01/12 20:48:56$
- */
+
 
 var req = require('../../lego/requester');
 var fs = require('fs');
@@ -51,9 +49,10 @@ cli.usage = 'edp lego get_template <saveto.json> <ID>[,<ID>]';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
-    req.prepare(function() {
+cli.main = function (args, opts) {
+    req.prepare(function () {
         var commandArgs = util.parseIds(args);
         if (!commandArgs || !commandArgs.ids.length) {
             console.log('ERROR: missing id of template in args');
@@ -69,8 +68,8 @@ cli.main = function ( args, opts ) {
         util.poolify(
             ids,
             20,
-            function(templateId, callback) {
-                req.getTemplateDetail(templateId, function(err, data) {
+            function (templateId, callback) {
+                req.getTemplateDetail(templateId, function (err, data) {
                     if (err) {
                         console.log('ERROR: read template fail: ' + err);
                     }
@@ -82,7 +81,9 @@ cli.main = function ( args, opts ) {
                             }
                             catch(e) {
                                 try {
+                                    /* eslint-disable */
                                     detail.spec = eval('(' + detail.spec + ')');
+                                    /* eslint-enable */
                                     // 如果用JS去解析JSON都解析不了
                                     // 那就回指定catch里的语句，报ERROR
                                     // 否则指定下面的语句，报WARNING
@@ -99,7 +100,7 @@ cli.main = function ( args, opts ) {
                     callback();
                 });
             },
-            function() {
+            function () {
                 console.log('It\'s saved in ' + file + '!');
                 fs.writeFileSync(file, JSON.stringify(list, null, 4));
             }

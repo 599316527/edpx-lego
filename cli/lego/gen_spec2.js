@@ -3,17 +3,13 @@
  * Copyright (c) 2013 Baidu.com, Inc. All Rights Reserved
  * $Id$
  *
- **************************************************************************/
-
-
-
-/**
- * gen_spec2.js ~ 2013/11/01 16:44:39
+ * @file   gen_spec2.js ~ 2013/11/01 16:44:39
  * @author leeight(liyubei@baidu.com)
  * @version $Revision$
  * @description
  *
- **/
+ **************************************************************************/
+
 
 /**
  * 命令行配置项
@@ -48,33 +44,33 @@ cli.usage = 'edp lego gen_spec2 <ad.js>';
 
 /**
  * 根据分析出来的tokens，生成对应的spec文件
- * @param {Array.<*>} tokens
+ * @param {Array.<*>} tokens .
  */
 function generateSpecs(tokens) {
     var fs = require('fs');
     var path = require('path');
 
     var spec = [];
-    tokens.forEach(function(token){
+    tokens.forEach(function (token) {
         var klsName = token[0];
         var key = token[1];
         var fileName = require('../../lego/base').getFilename(klsName);
         if (!fileName) {
-            console.error("No such file %s", fileName);
+            console.error('No such file %s', fileName);
             return;
         }
 
         var widgetSpecFileName = path.join('src',
             fileName.replace('.js', '.spec.json'));
         if (!fs.existsSync(widgetSpecFileName)) {
-            console.error("No such file %s", widgetSpecFileName);
+            console.error('No such file %s', widgetSpecFileName);
             return;
         }
 
         var widgetSpec = JSON.parse(
             fs.readFileSync(widgetSpecFileName, 'utf-8'));
         if (!widgetSpec) {
-            console.error("Invalid widget spec format %s", widgetSpecFileName);
+            console.error('Invalid widget spec format %s', widgetSpecFileName);
             return;
         }
 
@@ -88,14 +84,15 @@ function generateSpecs(tokens) {
     });
 
     console.log(JSON.stringify(spec, null, 2));
-};
+}
 
 /**
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
+cli.main = function (args, opts) {
     var fs = require('fs');
     if (!args[0] || !fs.existsSync(args[0])) {
         console.log(cli.usage);
@@ -103,15 +100,16 @@ cli.main = function ( args, opts ) {
     }
 
     if (!fs.existsSync('src/deps.js')) {
-        console.error("Can't find src/deps.js");
+        console.error('Can\'t find src/deps.js');
         process.exit(0);
     }
 
-    buildIndex();
+    var base = require('../../lego/base');
+    base.buildIndex();
 
-    var tokens = require('../../lego/base').getTokens(fs.readFileSync(args[0], 'utf-8'));
+    var tokens = base.getTokens(fs.readFileSync(args[0], 'utf-8'));
     generateSpecs(tokens);
-}
+};
 
 exports.cli = cli;
 

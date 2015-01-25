@@ -3,17 +3,15 @@
  * Copyright (c) 2013 Baidu.com, Inc. All Rights Reserved
  * $Id$
  *
- **************************************************************************/
-
-
-
-/**
- * lib/lego.js ~ 2013/10/11 13:38:53
- * @author leeight(liyubei@baidu.com)
+ * @file   lib/lego.js ~ 2013/10/11 13:38:53
+ * @author leeight(liyubei@baidu.com), songao(songao@baidu.com)
  * @version $Revision$
  * @description
  * lego.baidu.com相关的功能.
- **/
+ *
+ **************************************************************************/
+
+
 
 /**
  * 命令行配置项
@@ -45,9 +43,10 @@ cli.usage = 'edp lego <sub_cmd> ...';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
-    console.log( 'See `edp lego --help`' );
+cli.main = function (args, opts) {
+    console.log('See `edp lego --help`');
 };
 
 /**

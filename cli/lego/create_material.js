@@ -1,18 +1,16 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    lego/create_material.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/01/17 15:13:08$
+ * @desc:    输入JSON数组，输出物料
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    lego/create_material.js
- * desc:    输入JSON数组，输出物料
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/01/17 15:13:08$
- */
+
 
 var req = require('../../lego/requester');
 var fs = require('fs');
@@ -58,9 +56,10 @@ cli.usage = 'edp lego create_material <input_file> [<output_file>]';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
-    req.prepare(function() {
+cli.main = function (args, opts) {
+    req.prepare(function () {
         var input = args[0];
         var output = args[1] || 'materials.json';
         if (!input) {
@@ -77,8 +76,8 @@ cli.main = function ( args, opts ) {
         util.poolify(
             arr,
             5,
-            function(item, callback) {
-                req.createMaterial(item, function(err, data) {
+            function (item, callback) {
+                req.createMaterial(item, function (err, data) {
                     if (err) {
                         callback();
                         return;
@@ -89,12 +88,12 @@ cli.main = function ( args, opts ) {
                         'bcsUrl': result.bcsUrl,
                         'previewHtmlUrl': result.previewHtmlUrl,
                         'mid': result.mid
-                    }
+                    };
                     mats.push(mat);
                     callback();
                 });
             },
-            function() {
+            function () {
                 console.log('INFO: finished.');
                 fs.writeFileSync(output, JSON.stringify(mats, null, 4));
             }

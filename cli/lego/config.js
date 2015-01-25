@@ -1,18 +1,16 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    cli/lego/config.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/06/10 08:20:52$
+ * @desc:    配置
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    cli/lego/config.js
- * desc:    配置
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/06/10 08:20:52$
- */
+
 
 /**
  * 命令行配置项
@@ -39,9 +37,10 @@ cli.options = [];
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
-    console.log( 'See `edp lego config --help`' );
+cli.main = function (args, opts) {
+    console.log('See `edp lego config --help`');
 };
 
 /**

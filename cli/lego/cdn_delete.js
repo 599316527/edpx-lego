@@ -1,19 +1,15 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2013 Baidu.com, Inc. All Rights Reserved
- * $Id$ 
- * 
- **************************************************************************/
- 
- 
- 
-/**
- * /Users/leeight/local/leeight.github.com/edp-lego/lego/cdn_delete.js ~ 2013/10/29 21:09:17
+ * $Id$
+ *
+ * @file   cli/lego/cdn_delete.js ~ 2013/10/29 21:09:17
  * @author leeight(liyubei@baidu.com)
- * @version $Revision$ 
- * @description 
- *  
- **/
+ * @version $Revision$
+ * @description  cdn 删除缓存
+ *
+ **************************************************************************/
+
 
 /**
  * 命令行配置项
@@ -48,18 +44,21 @@ cli.usage = 'edp lego cdn_delete <url>';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
+cli.main = function (args, opts) {
     var url = args[0];
     if (url) {
         var request = require('request');
         url = 'http://mailer.bae.baidu.com/service/cdn/delete_file?s=' + encodeURIComponent(url);
         request(url, function (error, response, body) {
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
             console.log(body);
         });
     }
-}
+};
 
 
 /**

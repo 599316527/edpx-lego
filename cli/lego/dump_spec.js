@@ -1,17 +1,13 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2013 Baidu.com, Inc. All Rights Reserved
- * $Id$ 
- * 
- **************************************************************************/
- 
- 
- 
-/**
- * dump_spec.js ~ 2013/12/05 21:14:12
- * @author leeight(liyubei@baidu.com)
- * @version $Revision$ 
- * @description 
+ * $Id$
+ *
+ * @file    dump_spec.js ~ 2013/12/05 21:14:12
+ * @author  leeight(liyubei@baidu.com)
+ * @version $Revision$
+ * @description
+ *
  * 分析自定义js的样式，提取widget和spec的对应关系
  * 一个widget可能会有多个spec，主要的方式是分析
  *
@@ -20,8 +16,11 @@
  *      -> src/ad/impl/foobar.js
  *         -> 代码中AD_CONFIG['spec_name']
  *            -> 从配置里面去读spec_name
- **/
-var mysql      = require('mysql');
+ *
+ **************************************************************************/
+
+
+var mysql = require('mysql');
 
 var cli = {};
 
@@ -46,6 +45,7 @@ var WidgetSpecCache = {};
 
 /**
  * 分析template的信息，提取样式中用到的widget，以及对应的spec信息.
+ * @param {Object} template 样式信息
  */
 function parseTemplate(template) {
     var fs = require('fs');
@@ -59,10 +59,12 @@ function parseTemplate(template) {
     var tokens = base.getTokens(fs.readFileSync('src/' + filename, 'utf-8'), filename);
 
     // FIXME(leeight) 貌似JSON.parse有时候会挂掉
+    /* eslint-disable */
     var originSpec = eval('(' + template.original_spec + ')');
+    /* eslint-enable */
 
     function findByKey(specs, key) {
-        for (var i = 0; i < specs.length; i ++) {
+        for (var i = 0; i < specs.length; i++) {
             if (specs[i].name === key) {
                 return specs[i];
             }
@@ -70,7 +72,7 @@ function parseTemplate(template) {
     }
 
     var map = {};
-    tokens.forEach(function(item){
+    tokens.forEach(function (item) {
         var namespace = item[0];
         var key = item[1];
         if (!map[namespace]) {
@@ -87,7 +89,7 @@ function parseTemplate(template) {
 
     function notFound(collection, item) {
         var _ = require('underscore');
-        for (var i = 0; i < collection.length; i ++) {
+        for (var i = 0; i < collection.length; i++) {
             if (_.isEqual(collection[i].spec, item.spec)) {
                 return i;
             }
@@ -95,16 +97,18 @@ function parseTemplate(template) {
         return true;
     }
 
-    for(var key in map) {
-        if (!WidgetSpecCache[key]) {
-            WidgetSpecCache[key] = [];
-        }
-        var rv = notFound(WidgetSpecCache[key], map[key]);
-        if (rv === true) {
-            WidgetSpecCache[key].push(map[key]);
-        }
-        else {
-            WidgetSpecCache[key][rv].template.name += ('<strong>&#8596;</strong>' + map[key].template.name);
+    for (var key in map) {
+        if (map.hasOwnProperty(key)) {
+            if (!WidgetSpecCache[key]) {
+                WidgetSpecCache[key] = [];
+            }
+            var rv = notFound(WidgetSpecCache[key], map[key]);
+            if (rv === true) {
+                WidgetSpecCache[key].push(map[key]);
+            }
+            else {
+                WidgetSpecCache[key][rv].template.name += ('<strong>&#8596;</strong>' + map[key].template.name);
+            }
         }
     }
 }
@@ -113,33 +117,37 @@ function dumpSpecs() {
     console.log(JSON.stringify(WidgetSpecCache, null, 2));
 }
 
-cli.main = function() {
+cli.main = function () {
     var connection = mysql.createConnection({
-        host     : 'yx-testing-qapool81.yx01.baidu.com',
-        port     : 8031,
-        database : 'lego',
-        user     : 'work',
-        password : '123456',
-        charset  : 'utf-8',
-        dateStrings : true
+        host: 'yx-testing-qapool81.yx01.baidu.com',
+        port: 8031,
+        database: 'lego',
+        user: 'work',
+        password: '123456',
+        charset: 'utf-8',
+        dateStrings: true
     });
-    connection.connect(function(err){
-        if (err) throw err;
+    connection.connect(function (err) {
+        if (err) {
+            throw err;
+        }
     });
 
     var sql = 'SELECT `template`.*, `template_content`.data AS `namespace` ' +
         'FROM `template` LEFT JOIN `template_content` ON `template`.id = `template_content`.tid ' +
         'WHERE `template`.type = "JS" AND `template`.status = "RELEASED"';
 
-    connection.query(sql, function(err, rows, fields){
-        if (err) throw err;
+    connection.query(sql, function (err, rows, fields) {
+        if (err) {
+            throw err;
+        }
 
         rows.forEach(parseTemplate);
         dumpSpecs();
     });
 
     connection.end();
-}
+};
 
 exports.cli = cli;
 

@@ -1,19 +1,17 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    requester.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/01/08 16:50:50$
+ * @desc:    连接素材库请求
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    requester.js
- * desc:    
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/01/08 16:50:50$
- */
 
+/* eslint-disable dot-notation */
 
 var config = require('../config');
 var request = require('request');
@@ -26,27 +24,25 @@ var prompt = require('prompt');
  * request不同版本使用的jar不一样，所以封装这么一个util来操作jar
  */
 var jarUtil = {
-    getJarType: function(jar) {
+    getJarType: function (jar) {
         if (jar.constructor.prototype.setCookie) {
             return 'tough-cookie';
         }
-        else {
-            return 'cookie-jar';
-        }
+        return 'cookie-jar';
     },
-    setCookie: function(jar, cookie, path) {
+    setCookie: function (jar, cookie, path) {
         var type = jarUtil.getJarType(jar);
-        if (type == 'tough-cookie') {
-            jar.setCookie(cookie, path, {}, function() {});
+        if (type === 'tough-cookie') {
+            jar.setCookie(cookie, path, {}, function () {});
         }
         else {
             jar.add(request.cookie(cookie));
         }
     },
-    getCookieString: function(jar, host, callback) {
+    getCookieString: function (jar, host, callback) {
         var type = jarUtil.getJarType(jar);
-        if (type == 'tough-cookie') {
-            jar.getCookieString(host, function(err, cookies) {
+        if (type === 'tough-cookie') {
+            jar.getCookieString(host, function (err, cookies) {
                 callback(err, cookies);
             });
         }
@@ -67,11 +63,11 @@ var jarUtil = {
 };
 
 function prepare(callback) {
-    checkCookie(function(err) {
+    checkCookie(function (err) {
         if (err) {
             config.saveCookie(''); // 清空原来的cookie
             console.log('INFO: try to login');
-            login(function(err) {
+            login(function (err) {
                 if (!err) {
                     callback(null);
                 }
@@ -90,7 +86,7 @@ function checkCookie(callback) {
     post(
         getUrl('/data/session/read'),
         {},
-        function(err, data) {
+        function (err, data) {
             if (err || !data) {
                 console.log('WARN: cookie already invalid, please update it in config.js');
                 callback(err || '--');
@@ -122,11 +118,11 @@ function login(callback) {
             console.log('Wrong username or password, try again:');
         }
         var env = config.getEnviroment();
-        getUserAccount(function(err) {
+        getUserAccount(function (err) {
             get(
                 env.loginPath,
                 {},
-                function(err, data, res) {
+                function (err, data, res) {
                     addCookie(res.headers['set-cookie'], env.loginPath);
 
                     var html = data;
@@ -159,7 +155,7 @@ function login(callback) {
             }
         };
         prompt.start();
-        prompt.get(schema, function(err, result) {
+        prompt.get(schema, function (err, result) {
             user = result;
 
             callback(null);
@@ -168,7 +164,7 @@ function login(callback) {
 
     function addCookie(cookies, path) {
         if (cookies && cookies.length) {
-            cookies.forEach(function(item) {
+            cookies.forEach(function (item) {
                 jarUtil.setCookie(jar, item, path);
             });
         }
@@ -195,12 +191,12 @@ function login(callback) {
                 '_eventId': 'submit',
                 'submit': ''
             },
-            function(err, data, res) {
+            function (err, data, res) {
                 addCookie(res.headers['set-cookie'], path);
-                if (res.statusCode == '200') {
+                if (res.statusCode === '200' || res.statusCode === 200) {
                     loginStage2(data);
                 }
-                else if (res.statusCode == '302') {
+                else if (res.statusCode === '302' || res.statusCode === 302) {
                     loginToPath(res.headers['location']);
                 }
                 else {
@@ -225,18 +221,18 @@ function login(callback) {
         }
         var allImg = html.replace(/\n/g, ' ').match(/<img[^>]+>/g);
         var srcs = [];
-        allImg.forEach(function(one) {
+        allImg.forEach(function (one) {
             var matches = one.match(/<img[^>]*src="([^"]+)"[^>]*>/);
             if (matches && matches.length > 1) {
                 var src = matches[1];
                 srcs.push(src);
             }
         });
-        srcs.forEach(function(src) {
-            post(src, {}, function() {});
+        srcs.forEach(function (src) {
+            post(src, {}, function () {});
         });
         var env = config.getEnviroment();
-        setTimeout(function() {
+        setTimeout(function () {
             post(
                 env.loginPath,
                 {
@@ -244,13 +240,13 @@ function login(callback) {
                     '_eventId': 'submit',
                     'setCookiePathFailure': 'http://setcookie2.com'
                 },
-                function(err, data, res) {
+                function (err, data, res) {
                     addCookie(res.headers['set-cookie'], env.loginPath);
-                    if (res.statusCode == '200') {
+                    if (res.statusCode === '200' || res.statusCode === 200) {
                         console.log('ERROR: login error! why 200?');
                         startLogin();
                     }
-                    else if (res.statusCode == '302') {
+                    else if (res.statusCode === '302' || res.statusCode === 302) {
                         loginStage3(res.headers['location']);
                     }
                     else {
@@ -272,15 +268,17 @@ function login(callback) {
         get(
             legoUrl,
             info.query,
-            function(err, data, res) {
+            function (err, data, res) {
                 if (err) {
                     console.log('Error: ' + err);
                     startLogin();
                     return;
                 }
                 addCookie(res.headers['set-cookie'], legoUrl);
-                if (res.statusCode == '200' || res.statusCode == '302') {
-                    jarUtil.getCookieString(jar, env.legoHost, function(err, cookies) {
+                if (res.statusCode === '200' || res.statusCode === '302'
+                    || res.statusCode === 200 || res.statusCode === 302
+                ) {
+                    jarUtil.getCookieString(jar, env.legoHost, function (err, cookies) {
                         if (err) {
                             callback(err);
                             return;
@@ -332,12 +330,12 @@ function getTemplateList(callback) {
                 'page.orderBy': '',
                 'page.order': ''
             },
-            function(err, data) {
+            function (err, data) {
                 if (err) {
                     callback(err);
                 }
                 else {
-                    if (data.success != 'true') {
+                    if (data.success !== 'true') {
                         callback(JSON.stringify(data));
                         return;
                     }
@@ -346,7 +344,7 @@ function getTemplateList(callback) {
                     var pageSize = page.pageSize;
                     var pageNo = page.pageNo;
                     list = list.concat(page.result);
-                    if (totalCount/pageSize > pageNo) {
+                    if (totalCount / pageSize > pageNo) {
                         requestPage(pageNo + 1);
                     }
                     else {
@@ -360,7 +358,7 @@ function getTemplateList(callback) {
 
 function updateObjectVersion(detail, callback) {
     // 读详情更新objectVersion
-    getTemplateDetail(detail.templateId, function(err, data) {
+    getTemplateDetail(detail.templateId, function (err, data) {
         if (err || !parseError(data)) {
             console.log('ERROR: read template fail, templateId = ' + detail.templateId);
             callback(err || '--', data);
@@ -373,7 +371,7 @@ function updateObjectVersion(detail, callback) {
 }
 
 function disableTemplate(detail, callback) {
-    updateObjectVersion(detail, function(err, data) {
+    updateObjectVersion(detail, function (err, data) {
         if (err) {
             callback(err, data);
             return;
@@ -392,9 +390,9 @@ function disableTemplate(detail, callback) {
 function makeTemplate(detail, callback) {
     var chance = 5;
     function giveItATry() {
-        if (detail.templateType == 'JS') {
+        if (detail.templateType === 'JS') {
             var spec = detail.spec;
-            if (typeof spec == 'object') {
+            if (typeof spec === 'object') {
                 spec = JSON.stringify(spec);
             }
             post(
@@ -406,10 +404,10 @@ function makeTemplate(detail, callback) {
                     'spec': spec,
                     'flags': (detail.flags ? JSON.stringify(detail.flags) : 'null')
                 },
-                function(err, data) {
-                    if (err || data.success != 'true') {
+                function (err, data) {
+                    if (err || data.success !== 'true') {
                         chance--;
-                        if (chance == 0) {
+                        if (chance === 0) {
                             callback(err, data);
                         }
                         else {
@@ -423,7 +421,7 @@ function makeTemplate(detail, callback) {
             );
         }
         else {
-            detail.widgets.forEach(function(widget, i) {
+            detail.widgets.forEach(function (widget, i) {
                 if (widget.styles) {
                     widget.cssText = util.getCssText(widget.styles, '#canvas .ad-inst-' + i);
                 }
@@ -437,10 +435,10 @@ function makeTemplate(detail, callback) {
                     'layouts': JSON.stringify(detail.layouts),
                     'flags': (detail.flags ? JSON.stringify(detail.flags) : 'null')
                 },
-                function(err, data) {
-                    if (err || data.success != 'true') {
+                function (err, data) {
+                    if (err || data.success !== 'true') {
                         chance--;
-                        if (chance == 0) {
+                        if (chance === 0) {
                             callback(err, data);
                         }
                         else {
@@ -454,7 +452,7 @@ function makeTemplate(detail, callback) {
             );
         }
     }
-    updateObjectVersion(detail, function(err, data) {
+    updateObjectVersion(detail, function (err, data) {
         if (err) {
             callback(err, data);
             return;
@@ -464,7 +462,7 @@ function makeTemplate(detail, callback) {
 }
 
 function publishTemplate(detail, callback) {
-    updateObjectVersion(detail, function(err, data) {
+    updateObjectVersion(detail, function (err, data) {
         if (err) {
             callback(err, data);
             return;
@@ -484,7 +482,7 @@ function publishTemplate(detail, callback) {
 // 兼容通过ID更新和通过JSON更新
 function updateTemplate(detail, callback) {
     var templateId;
-    if (typeof detail == 'object') {
+    if (typeof detail === 'object') {
         templateId = detail.templateId;
     }
     else {
@@ -492,7 +490,7 @@ function updateTemplate(detail, callback) {
         detail = null;
     }
     // 先读一下最新的详情，以免状态和objectVersion已经更改
-    getTemplateDetail(templateId, function(err, data) {
+    getTemplateDetail(templateId, function (err, data) {
         if (err || !parseError(data)) {
             console.log('ERROR: read template fail, templateId = ' + templateId);
             callback(err || '--', data);
@@ -507,20 +505,22 @@ function updateTemplate(detail, callback) {
         }
         var curStatus = newDetail.status;
         var status = detail.status;
-        if (curStatus == 'RELEASED') { // 已发布的需要先禁用，而且更新完之后需要再发布
-            disableTemplate(detail, function(err, data) {
+        if (curStatus === 'RELEASED') { // 已发布的需要先禁用，而且更新完之后需要再发布
+            disableTemplate(detail, function (err, data) {
                 if (err || !parseError(data)) {
                     console.log('ERROR: disable template fail, templateId = ' + detail.templateId);
                 }
                 else {
-                    makeTemplate(detail, function(err, data) {
+                    makeTemplate(detail, function (err, data) {
                         if (err || !parseError(data)) {
+                            /* eslint-disable */
                             console.log('ERROR: make template fail, templateId = ' + detail.templateId);
                             // 更新失败，但试图恢复原来样式的status
-                            next(function() {
+                            next(function () {
                                 // 不管next是否成功，这里都要返回失败
                                 callback(err || '--');
                             });
+                            /* eslint-enable */
                         }
                         else {
                             next(callback);
@@ -529,26 +529,25 @@ function updateTemplate(detail, callback) {
                 }
             });
         }
-        else if (curStatus == 'UNFINISHED') { // 未完成的直接忽略掉
+        else if (curStatus === 'UNFINISHED') { // 未完成的直接忽略掉
             console.log('INFO: template is unfinished, skip, templateId = ' + detail.templateId);
             callback(null);
             return;
         }
-        else { // DISABLED NOT_RELEASED 这俩种状态等价，只需要保存一遍就行
-            makeTemplate(detail, function(err, data) {
-                if (err || !parseError(data)) {
-                    console.log('ERROR: make template fail, templateId = ' + detail.templateId);
-                    callback(err || '--');
-                }
-                else {
-                    next(callback);
-                }
-            });
-        }
+        // DISABLED NOT_RELEASED 这俩种状态等价，只需要保存一遍就行
+        makeTemplate(detail, function (err, data) {
+            if (err || !parseError(data)) {
+                console.log('ERROR: make template fail, templateId = ' + detail.templateId);
+                callback(err || '--');
+            }
+            else {
+                next(callback);
+            }
+        });
 
         function next(callback) {
-            if (status == 'RELEASED') {
-                publishTemplate(detail, function(err, data) {
+            if (status === 'RELEASED') {
+                publishTemplate(detail, function (err, data) {
                     if (err || !parseError(data)) {
                         console.log('ERROR: publish template fail, templateId = ' + detail.templateId);
                         callback(err || '--');
@@ -569,6 +568,8 @@ function updateTemplate(detail, callback) {
 
 /**
  * 通过mcid获取drmc内容
+ * @param {number} mcid mcid
+ * @param {Function} callback 回调
  */
 function getDrmcByMcid(mcid, callback) {
     getDrmcContent(mcid, '1', callback);
@@ -576,6 +577,8 @@ function getDrmcByMcid(mcid, callback) {
 
 /**
  * 通过mid获取drmc内容
+ * @param {number} mid 物料ID
+ * @param {Function} callback 回调
  */
 function getDrmcByMid(mid, callback) {
     getDrmcContent(mid, '0', callback);
@@ -583,6 +586,9 @@ function getDrmcByMid(mid, callback) {
 
 /**
  * 获取drmc内容
+ * @param {number} id ID
+ * @param {string} type 是mcid还是mid
+ * @param {Function} callback 回调
  */
 function getDrmcContent(id, type, callback) {
     var nameMap = {
@@ -595,7 +601,7 @@ function getDrmcContent(id, type, callback) {
             'id': id,
             'type': type
         },
-        function(err, data) {
+        function (err, data) {
             if (err || !parseError(data)) {
                 console.log('ERROR: get drmc content fail, ' + nameMap[type] + '= ' + id);
                 callback(err || data);
@@ -609,6 +615,9 @@ function getDrmcContent(id, type, callback) {
 
 /**
  * 通过mcid更新drmc内容
+ * @param {number} mcid mcid
+ * @param {string} content 内容
+ * @param {Function} callback 回调
  */
 function updateDrmcByMcid(mcid, content, callback) {
     updateDrmcContent(mcid, '1', content, callback);
@@ -616,6 +625,9 @@ function updateDrmcByMcid(mcid, content, callback) {
 
 /**
  * 通过mid更新drmc内容
+ * @param {number} mid 物料ID
+ * @param {string} content 内容
+ * @param {Function} callback 回调
  */
 function updateDrmcByMid(mid, content, callback) {
     updateDrmcContent(mid, '0', content, callback);
@@ -623,6 +635,10 @@ function updateDrmcByMid(mid, content, callback) {
 
 /**
  * 更新drmc内容
+ * @param {number} id ID
+ * @param {string} type 是mcid还是mid
+ * @param {string} content 内容
+ * @param {Function} callback 回调
  */
 function updateDrmcContent(id, type, content, callback) {
     var nameMap = {
@@ -636,7 +652,7 @@ function updateDrmcContent(id, type, content, callback) {
             'type': type,
             'content': content
         },
-        function(err, data) {
+        function (err, data) {
             if (err || !parseError(data)) {
                 console.log('ERROR: update drmc content fail, ' + nameMap[type] + ' = ' + id);
                 callback(err || data);
@@ -651,16 +667,18 @@ function updateDrmcContent(id, type, content, callback) {
 
 /**
  * 创建物料
- * @param {{
- *    templateId: number,
- *    ?app: number,
- *    ?outputType: string,
- *    ?plugins: string,
- *    ?linkTransformType: string,
- *    ?pluginValues: Object,
- *    ?previewTemplate: string,
- *    data: Object
- * }} materialData 物料数据
+ * @param {Object} materialData 物料数据
+ *  {
+ *      templateId: number,
+ *      ?app: number,
+ *      ?outputType: string,
+ *      ?plugins: string,
+ *      ?linkTransformType: string,
+ *      ?pluginValues: Object,
+ *      ?previewTemplate: string,
+ *      data: Object
+ *   }
+ * @param {Function} callback 回调
  */
 function createMaterial(materialData, callback) {
     var defaultData = {
@@ -669,39 +687,44 @@ function createMaterial(materialData, callback) {
         'plugins': 'ad.plugin.ClickMonkey,ad.plugin.PsMonitor',
         'linkTransformType': 'nil',
         'pluginValues': {
-            "ad.plugin.ClickMonkey": {
-                "plid": "%PLID%"
+            'ad.plugin.ClickMonkey': {
+                'plid': '%PLID%'
             },
-            "ad.plugin.WiseClickMonkey": {
-                "plid": "%PLID%"
+            'ad.plugin.WiseClickMonkey': {
+                'plid': '%PLID%'
             },
-            "ad.plugin.Hmt": {
-                "hmjs_id": ""
+            'ad.plugin.Hmt': {
+                'hmjs_id': ''
             },
-            "ad.plugin.PsMonitor": {
-                "fm": ""
+            'ad.plugin.PsMonitor': {
+                'fm': ''
             }
         },
         'previewTemplate': 'ad/template/ps.tpl'
     };
-    for (var key in defaultData) {
-        if (typeof materialData[key] == 'undefined') {
-            materialData[key] = defaultData[key];
+    var key;
+    for (key in defaultData) {
+        if (defaultData.hasOwnProperty(key)) {
+            if (typeof materialData[key] === 'undefined') {
+                materialData[key] = defaultData[key];
+            }
         }
     }
     var postData = {};
-    for (var key in materialData) {
-        if (typeof materialData[key] == 'object') {
-            postData[key] = JSON.stringify(materialData[key]);
-        }
-        else {
-            postData[key] = materialData[key];
+    for (key in materialData) {
+        if (materialData.hasOwnProperty(key)) {
+            if (typeof materialData[key] === 'object') {
+                postData[key] = JSON.stringify(materialData[key]);
+            }
+            else {
+                postData[key] = materialData[key];
+            }
         }
     }
     post(
         getUrl('/data/material/create'),
         postData,
-        function(err, data) {
+        function (err, data) {
             if (err || !parseError(data)) {
                 console.log('ERROR: make material fail, input = ' + JSON.stringify(materialData));
                 callback(err || data);
@@ -716,12 +739,14 @@ function createMaterial(materialData, callback) {
 
 /**
  * 解析错误信息
+ * @param {Object} data 数据
+ * @return {boolean}
  */
 function parseError(data) {
     var title = null;
     var err = null;
     var errArr = null;
-    if (data.success != 'true' && data.success !== true) {
+    if (data.success !== 'true' && data.success !== true) {
         var message = data.message;
         if (!message) {
             title = '系统提示';
@@ -731,8 +756,8 @@ function parseError(data) {
             title = '系统提示';
             err = message.global;
         }
-        else if (typeof message.redirect != 'undefined') { // 重定向
-            title = '重定向'
+        else if (typeof message.redirect !== 'undefined') { // 重定向
+            title = '重定向';
             err = message.redirect;
         }
         else if (!message.field) {
@@ -747,36 +772,38 @@ function parseError(data) {
         console.log(JSON.stringify(data));
         return false;
     }
-    else {
-        return true;
-    }
+    return true;
 
     /**
      * 将后端返回的json格式的message转化为文本
+     * @param {Object} message 数据
+     * @return {Array.<string>}
      */
     function parseMessage(message) {
-        var errorMap = message['field'];
+        var errorMap = message.field;
         if (!errorMap) {
             return '';
         }
         var msgTextArr = [];
         for (var key in errorMap) {
-            var item = errorMap[key];
-            msgTextArr.push(item);
+            if (errorMap.hasOwnProperty(key)) {
+                var item = errorMap[key];
+                msgTextArr.push(item);
+            }
         }
         return msgTextArr;
     }
-};
+}
 
 function post(url, params, callback, options) {
-    if (typeof params == 'function') {
+    if (typeof params === 'function') {
         options = callback;
         callback = params;
         params = null;
     }
     options = options || {};
-    if (typeof options['json'] == 'undefined') {
-        options['json'] = true;
+    if (typeof options.json === 'undefined') {
+        options.json = true;
     }
     if (params) {
         options.form = params;
@@ -785,27 +812,27 @@ function post(url, params, callback, options) {
         var env = config.getEnviroment();
         var jar = options.jar || request.jar();
         var parts = config.cookie.split(';');
-        parts.forEach(function(one) {
+        parts.forEach(function (one) {
             if (one) {
                 jarUtil.setCookie(jar, one, env.legoHost.replace(/\/$/, ''));
             }
         });
         options.jar = jar;
     }
-    request.post(url, options, function(err, res, body) {
+    request.post(url, options, function (err, res, body) {
         callback(err, body, res);
     });
 }
 
 function get(url, params, callback, options) {
-    if (typeof params == 'function') {
+    if (typeof params === 'function') {
         options = callback;
         callback = params;
         params = null;
     }
     options = options || {};
-    if (typeof options['json'] == 'undefined') {
-        options['json'] = true;
+    if (typeof options.json === 'undefined') {
+        options.json = true;
     }
     if (params) {
         options.qs = params;
@@ -814,17 +841,17 @@ function get(url, params, callback, options) {
         var env = config.getEnviroment();
         var jar = options.jar || request.jar();
         var parts = config.cookie.split(';');
-        parts.forEach(function(one) {
+        parts.forEach(function (one) {
             if (one) {
                 jarUtil.setCookie(jar, one, env.legoHost.replace(/\/$/, ''));
             }
         });
         options.jar = jar;
     }
-    request.get(url, options, function(err, res, body) {
+    request.get(url, options, function (err, res, body) {
         callback(err, body, res);
     });
-};
+}
 
 function getUrl(path) {
     var env = config.getEnviroment();

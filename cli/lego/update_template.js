@@ -1,18 +1,16 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    update_template.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/01/13 11:29:03$
+ * @desc:    更新指定ID的一个或多个样式
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    update_template.js
- * desc:    更新指定ID的一个或多个样式
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/01/13 11:29:03$
- */
+
 
 var req = require('../../lego/requester');
 var fs = require('fs');
@@ -51,9 +49,10 @@ cli.usage = 'edp lego update_template <ID>[,<ID>]';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
-    req.prepare(function() {
+cli.main = function (args, opts) {
+    req.prepare(function () {
         var commandArgs = util.parseIds(args);
         if (!commandArgs || !commandArgs.ids.length) {
             console.log('ERROR: missing id of template in args');
@@ -68,8 +67,8 @@ cli.main = function ( args, opts ) {
         util.poolify(
             ids,
             2,
-            function(templateId, callback) {
-                req.updateTemplate(templateId, function(err) {
+            function (templateId, callback) {
+                req.updateTemplate(templateId, function (err) {
                     if (err) {
                         console.log('ERROR: update template fail: ' + err + ', templateId = ' + templateId);
                         failedList.push(templateId);
@@ -77,7 +76,7 @@ cli.main = function ( args, opts ) {
                     callback();
                 });
             },
-            function() {
+            function () {
                 if (failedList.length) {
                     console.log('ERROR: failed templates are:');
                     console.log(failedList.join(','));

@@ -3,17 +3,14 @@
  * Copyright (c) 2013 Baidu.com, Inc. All Rights Reserved
  * $Id$
  *
- **************************************************************************/
-
-
-
-/**
- * lib/gen_spec.js ~ 2013/10/11 13:54:59
+ * @file   lib/gen_spec.js ~ 2013/10/11 13:54:59
  * @author leeight(liyubei@baidu.com)
  * @version $Revision$
  * @description
  * 生成一个定制样式的spec.
- **/
+ *
+ **************************************************************************/
+
 
 /**
  * 命令行配置项
@@ -50,11 +47,12 @@ cli.usage = 'edp lego gen_spec --from=spec.json[ --to=spec.final.json]';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
+cli.main = function (args, opts) {
     // 读取from的输入，解析如下格式的内容
-    // "Var(ad.widget.H1)"
-    // "Var(ad.widget.H1@32)"
+    // 'Var(ad.widget.H1)'
+    // 'Var(ad.widget.H1@32)'
     // 然后根据http://lego-api-sandbox.baidu.com/v1/widgets/list?ns=ad.widget.siva.Img_with_sitelinks这个接口
     // 获取对应的spec信息，替换并输出到--to或者标准输出
     var fs = require('fs');
@@ -65,7 +63,7 @@ cli.main = function ( args, opts ) {
 
     var input = JSON.parse(fs.readFileSync(opts.from));
     if (!input) {
-        console.error("Invalid json input `%s'", opts.from);
+        console.error('Invalid json input `%s\'', opts.from);
         process.exit(1);
     }
 
@@ -79,7 +77,7 @@ cli.main = function ( args, opts ) {
         //    'rules':{},'items':'Var(ad.widget.ImageGrid)'}
         // ]
         var transformed = [];
-        for(var key in input) {
+        for (var key in input) {
             if (typeof input[key] === 'string' &&
                 /^ad\.widget\./.test(input[key])) {
                 transformed.push({
@@ -98,32 +96,33 @@ cli.main = function ( args, opts ) {
     // 获取所有的ns列表
     var list = [];
     function walk(root, callback) {
-        if (typeof root === 'array') {
-            for (var i = 0; i < root.length; i ++) {
+        if (Object.prototype.toString.call(root) === '[object Array]') {
+            for (var i = 0; i < root.length; i++) {
                 walk(root[i], callback);
             }
-        } else if (typeof root === 'object') {
-            for(var key in root) {
-                var value = root[key];
-                if (typeof value === 'array' || typeof value === 'object') {
-                    walk(value, callback);
-                }
-                else if (typeof value === 'string') {
-                    var pattern = /^Var\(([\w\d\._]+)(@(\d+))?\)$/;
-                    var match = pattern.exec(value)
-                    if (match) {
-                        callback(root, key, value, match);
+        }
+        else if (typeof root === 'object') {
+            for (var key in root) {
+                if (root.hasOwnProperty(key)) {
+                    var value = root[key];
+                    if (typeof value === 'object') {
+                        walk(value, callback);
+                    }
+                    else if (typeof value === 'string') {
+                        var pattern = /^Var\(([\w\d\._]+)(@(\d+))?\)$/;
+                        var match = pattern.exec(value);
+                        match && callback(root, key, value, match);
                     }
                 }
             }
         }
     }
-    walk(input, function(node, key, value, match){
+    walk(input, function (node, key, value, match) {
         list.push(match[1]);
     });
 
     if (list.length <= 0) {
-        console.error("Nothing can be replaced.");
+        console.error('Nothing can be replaced.');
         process.exit(0);
     }
 
@@ -140,23 +139,23 @@ cli.main = function ( args, opts ) {
         var request = require('request');
         var ns = list[index];
         if (rsp[ns]) {
-            index ++;
+            index++;
             getWidgetInfo(callback);
             return;
         }
 
         var url = 'http://lego-api-sandbox.baidu.com/v1/widgets/list?ns=' + encodeURIComponent(ns);
         request(url, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
+            if (!error && response.statusCode === 200) {
                 rsp[ns] = JSON.parse(body);
             }
-            index ++;
+            index++;
             getWidgetInfo(callback);
         });
     }
 
-    getWidgetInfo(function(){
-        walk(input, function(node, key, value, match){
+    getWidgetInfo(function () {
+        walk(input, function (node, key, value, match) {
             var ns = match[1];
             var id = parseInt(match[3] || 0, 10);
             var array = rsp[ns];
@@ -166,7 +165,7 @@ cli.main = function ( args, opts ) {
 
             var item = array[0];
             if (id !== 0) {
-                for (var i = 0; i < array.length; i ++) {
+                for (var i = 0; i < array.length; i++) {
                     if (array[i].id === id) {
                         item = array[i];
                         break;

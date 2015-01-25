@@ -1,18 +1,16 @@
 /***************************************************************************
- * 
+ *
  * Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
  * $Id$
- * 
+ *
+ * @file:    cli/lego/config/list.js
+ * @author:  songao(songao@baidu.com)
+ * @version: $Revision$
+ * @date:    $Date: 2014/06/10 11:52:14$
+ * @desc:    列出配置项
+ *
  **************************************************************************/
- 
- 
-/*
- * path:    cli/lego/config/list.js
- * desc:    列出配置项
- * author:  songao(songao@baidu.com)
- * version: $Revision$
- * date:    $Date: 2014/06/10 11:52:14$
- */
+
 
 /**
  * 命令行配置项
@@ -53,13 +51,14 @@ cli.usage = 'edp lego config list';
  * 模块命令行运行入口
  *
  * @param {Array} args 命令运行参数
+ * @param {Object} opts 选项
  */
-cli.main = function ( args, opts ) {
+cli.main = function (args, opts) {
     var config = require('../../../config');
     var confData = config.get();
-    Object.keys(confData).forEach(function(key) {
+    Object.keys(confData).forEach(function (key) {
         var value = confData[key];
-        if (typeof value == 'object') {
+        if (typeof value === 'object') {
             value = JSON.stringify(value, null, 4);
         }
 
