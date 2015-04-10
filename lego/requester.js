@@ -366,6 +366,7 @@ function updateObjectVersion(detail, callback) {
         }
         var newDetail = data.result;
         detail.objectVersion = newDetail.objectVersion;
+        detail.informationObjectVersion = newDetail.informationObjectVersion;
         callback(null, detail);
     });
 }
@@ -400,9 +401,11 @@ function makeTemplate(detail, callback) {
                 {
                     'templateId': detail.templateId,
                     'objectVersion': detail.objectVersion,
+                    'informationObjectVersion': detail.informationObjectVersion,
                     'impls': JSON.stringify(detail.impls),
                     'spec': spec,
-                    'flags': (detail.flags ? JSON.stringify(detail.flags) : 'null')
+                    'flags': (detail.flags ? JSON.stringify(detail.flags) : 'null'),
+                    'convertor': detail.convertor || ''
                 },
                 function (err, data) {
                     if (err || data.success !== 'true') {
@@ -431,9 +434,11 @@ function makeTemplate(detail, callback) {
                 {
                     'templateId': detail.templateId,
                     'objectVersion': detail.objectVersion,
+                    'informationObjectVersion': detail.informationObjectVersion,
                     'widgets': JSON.stringify(detail.widgets),
                     'layouts': JSON.stringify(detail.layouts),
-                    'flags': (detail.flags ? JSON.stringify(detail.flags) : 'null')
+                    'flags': (detail.flags ? JSON.stringify(detail.flags) : 'null'),
+                    'convertor': detail.convertor || ''
                 },
                 function (err, data) {
                     if (err || data.success !== 'true') {
@@ -481,6 +486,8 @@ function publishTemplate(detail, callback) {
 
 // 兼容通过ID更新和通过JSON更新
 function updateTemplate(detail, callback) {
+    // 改个名字保存一下
+    var theFinalCallback = callback;
     var templateId;
     if (typeof detail === 'object') {
         templateId = detail.templateId;
@@ -493,7 +500,7 @@ function updateTemplate(detail, callback) {
     getTemplateDetail(templateId, function (err, data) {
         if (err || !parseError(data)) {
             console.log('ERROR: read template fail, templateId = ' + templateId);
-            callback(err || '--', data);
+            theFinalCallback(err || '--', data);
             return;
         }
         var newDetail = data.result;
@@ -502,9 +509,12 @@ function updateTemplate(detail, callback) {
         }
         else {
             detail.objectVersion = newDetail.objectVersion;
+            detail.informationObjectVersion = newDetail.informationObjectVersion;
         }
         var curStatus = newDetail.status;
         var status = detail.status;
+        // V3 里已经没有下面这个事情了
+        /*
         if (curStatus === 'RELEASED') { // 已发布的需要先禁用，而且更新完之后需要再发布
             disableTemplate(detail, function (err, data) {
                 if (err || !parseError(data)) {
@@ -513,54 +523,129 @@ function updateTemplate(detail, callback) {
                 else {
                     makeTemplate(detail, function (err, data) {
                         if (err || !parseError(data)) {
-                            /* eslint-disable */
                             console.log('ERROR: make template fail, templateId = ' + detail.templateId);
                             // 更新失败，但试图恢复原来样式的status
                             next(function () {
                                 // 不管next是否成功，这里都要返回失败
-                                callback(err || '--');
+                                theFinalCallback(err || '--');
                             });
-                            /* eslint-enable */
                         }
                         else {
-                            next(callback);
+                            next(theFinalCallback);
                         }
                     });
                 }
             });
         }
-        else if (curStatus === 'UNFINISHED') { // 未完成的直接忽略掉
+        */
+        if (curStatus === 'UNFINISHED') { // 未完成的直接忽略掉
             console.log('INFO: template is unfinished, skip, templateId = ' + detail.templateId);
-            callback(null);
+            theFinalCallback(null);
             return;
         }
-        // DISABLED NOT_RELEASED 这俩种状态等价，只需要保存一遍就行
+        // 模版制作：就是lego里的第二个步骤
         makeTemplate(detail, function (err, data) {
             if (err || !parseError(data)) {
                 console.log('ERROR: make template fail, templateId = ' + detail.templateId);
-                callback(err || '--');
+                theFinalCallback(err || '--');
             }
             else {
-                next(callback);
+                toLaunchAutoCheck();
             }
         });
 
-        function next(callback) {
-            if (status === 'RELEASED') {
-                publishTemplate(detail, function (err, data) {
+        // 发起自动验证
+        function toLaunchAutoCheck() {
+            post(
+                getUrl('/data/template/auto_check'),
+                {
+                    'templateId': detail.templateId,
+                    'objectVersion': detail.objectVersion
+                },
+                function (err, data) {
                     if (err || !parseError(data)) {
-                        console.log('ERROR: publish template fail, templateId = ' + detail.templateId);
-                        callback(err || '--');
+                        console.log('ERROR: launch auto check fail, templateId = ' + detail.templateId);
+                        theFinalCallback(err || data);
                     }
                     else {
-                        console.log('INFO: successfully update template, templateId = ' + detail.templateId);
-                        callback(null);
+                        toWaitAutoCheckFinish();
+                    }
+                }
+            );
+        }
+
+        // 等待自动验证通过
+        function toWaitAutoCheckFinish() {
+            var count = 0;
+            function checking() {
+                console.log('INFO: auto check heartbeat checking - tick ' + (++count) +  ', templateId = ' + detail.templateId);
+                getTemplateDetail(detail.templateId, function (err, data) {
+                    if (err || !parseError(data)) {
+                        console.log('ERROR: read template fail, templateId = ' + detail.templateId);
+                        theFinalCallback(err || '--', data);
+                        return;
+                    }
+                    var newDetail = data.result;
+                    if (newDetail.status === 'AUTO_CHECK_PASS') {
+                        detail.objectVersion = newDetail.objectVersion;
+                        detail.informationObjectVersion = newDetail.informationObjectVersion;
+                        toPassSelfCheck();
+                    }
+                    else {
+                        setTimeout(function() {
+                            checking();
+                        }, 5000);
                     }
                 });
             }
-            else {
+            checking();
+        }
+
+        // 通过人工验证
+        function toPassSelfCheck() {
+            post(
+                getUrl('/data/template/manual_check'),
+                {
+                    'templateId': detail.templateId,
+                    'objectVersion': detail.objectVersion,
+                    'ifSuccess': 'true'
+                },
+                function (err, data) {
+                    if (err || !parseError(data)) {
+                        console.log('ERROR: to pass self check fail, templateId = ' + detail.templateId);
+                        theFinalCallback(err || data);
+                    }
+                    else {
+                        updateObjectVersion(detail, function (err, data) {
+                            if (err) {
+                                theFinalCallback(err, data);
+                                return;
+                            }
+                            toPublish();
+                        });
+                    }
+                }
+            );
+        }
+
+        // 发布样式
+        function toPublish() {
+            if (curStatus === 'DISABLED') {
                 console.log('INFO: successfully update template, templateId = ' + detail.templateId);
-                callback(null);
+                console.log('WARN: but in disabled status, templateId = ' + detail.templateId);
+                theFinalCallback(null);
+            }
+            else {
+                publishTemplate(detail, function (err, data) {
+                    if (err || !parseError(data)) {
+                        console.log('ERROR: publish template fail, templateId = ' + detail.templateId);
+                        theFinalCallback(err || '--');
+                    }
+                    else {
+                        console.log('INFO: successfully update template, templateId = ' + detail.templateId);
+                        theFinalCallback(null);
+                    }
+                });
             }
         }
     });
