@@ -1,20 +1,26 @@
 {
-    "name": "edpx-lego",
-    "description": "lego.baidu.com extension for edp",
-    "version": "0.0.3",
-    "main": "index.js",
-    "contributors": [
-        { "name": "leeight", "email" : "leeight@gmail.com" },
-        { "name": "songao", "email" : "osdream.song@gmail.com" }
-    ],
-    "dependencies": {
-        "request": "2.27.0",
-        "esprima": "~1.0.2",
-        "estraverse": "~1.1.1",
-        "mysql": ">=2.0.0-rc1",
-        "underscore": ">=1.5.2",
-        "prompt": "*"
+  "name": "edpx-lego",
+  "description": "lego.baidu.com extension for edp",
+  "version": "0.0.5",
+  "main": "index.js",
+  "contributors": [
+    {
+      "name": "leeight",
+      "email": "leeight@gmail.com"
     },
-    "repository": "git://github.com/leeight/edp-lego"
+    {
+      "name": "songao",
+      "email": "osdream.song@gmail.com"
+    }
+  ],
+  "dependencies": {
+    "chalk": "^1.0.0",
+    "esprima": "~1.0.2",
+    "estraverse": "~1.1.1",
+    "mysql": ">=2.0.0-rc1",
+    "prompt": "*",
+    "request": "2.27.0",
+    "underscore": ">=1.5.2"
+  },
+  "repository": "git://github.com/leeight/edp-lego"
 }
-
